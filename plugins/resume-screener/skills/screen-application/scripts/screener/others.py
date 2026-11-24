@@ -17,7 +17,7 @@ from . import resumes, sections
 Case = dict[str, Any]
 Ask = Callable[[Case], list[dict[str, Any]]]  # a part of a case: the nearest held (`nearest`), nearest first
 PARTS: tuple[str, ...] = ("history", "words", "contact", "when")
-CEILING: dict[str, float] = {"history": 0.9, "words": 0.9, "contact": 0.3, "when": 0.4}  # chosen on the design runs
+CEILING: dict[str, float] = {"history": 0.9, "words": 0.9, "contact": 0.3, "when": 0.15}  # chosen on the design runs
 BURST: int = 3  # this many held applications as near as the ceiling make a burst
 TOP: int = 8
 PHONE: re.Pattern[str] = re.compile(r"(?<![\d-])(?:\+?\d{1,3}[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}(?!\d)")  # not a span of years
