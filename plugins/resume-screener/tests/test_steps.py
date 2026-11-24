@@ -32,7 +32,7 @@ def test_the_email_is_read_and_the_resume_told_from_the_cover_letter() -> None:
     assert raw["name"] == "Keisha Dubois" and raw["role"] == "senior backend engineer" and raw["resume_kind"] == "pdf"
     assert "Dear Ledgerline hiring team" in raw["text"]["letter"] and "EXPERIENCE" in raw["text"]["resume"].upper()
     assert raw["timing"]["flags"] == ["none"] and raw["timing"]["hops"] == 2
-    assert [a["part"] for a in steps.asks(got)] == ["history", "words", "contact", "when"]
+    assert [a["part"] for a in steps.asks(got)] == ["history", "words", "contact", "when", "named"]
     assert steps.asks(got)[0]["data"]["history"]["s"]["spans"] == ["2021-present", "2018-2021"]
     files = [("a.pdf", "pdf", "Dear team,\nSincerely, Ann"), ("b.pdf", "pdf", "Ann Lee\nExperience\nSkills: sql")]
     assert attachments.pick(files) == (1, [0])

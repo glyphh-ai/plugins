@@ -31,6 +31,10 @@
         {"name": "windows", "similarity_weight": 1.0},
         {"name": "when_who", "similarity_weight": 0}
       ]}]},
+      {"name": "named", "similarity_weight": 1.0, "segments": [{"name": "s", "roles": [
+        {"name": "full_name", "similarity_weight": 1.0},
+        {"name": "named_who", "similarity_weight": 0}
+      ]}]},
       {"name": "who", "similarity_weight": 0, "segments": [{"name": "s", "roles": [
         {"name": "name", "similarity_weight": 0},
         {"name": "label", "similarity_weight": 0},

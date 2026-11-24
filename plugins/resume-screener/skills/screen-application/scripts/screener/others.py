@@ -16,8 +16,9 @@ from . import resumes, sections
 
 Case = dict[str, Any]
 Ask = Callable[[Case], list[dict[str, Any]]]  # a part of a case: the nearest held (`nearest`), nearest first
-PARTS: tuple[str, ...] = ("history", "words", "contact", "when")
-CEILING: dict[str, float] = {"history": 0.9, "words": 0.47, "contact": 0.3, "when": 0.15}  # chosen on the design runs
+PARTS: tuple[str, ...] = ("history", "words", "contact", "when", "named")
+# Chosen on the design runs; `named` is the same name exactly.
+CEILING: dict[str, float] = {"history": 0.9, "words": 0.47, "contact": 0.3, "when": 0.15, "named": 0.99}
 BURST: int = 3  # this many held applications as near as the ceiling make a burst
 TOP: int = 8
 PHONE: re.Pattern[str] = re.compile(r"(?<![\d-])(?:\+?\d{1,3}[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}(?!\d)")  # not a span of years
@@ -29,6 +30,7 @@ SAID: dict[str, str] = {
     "same_words": "the same phrasing as {who}, under another name",
     "shared_contact": "a contact detail shared with {who}, another name",
     "applied_before": "the same person as {who}, applying again",
+    "same_name_other_contact": "the same name as {who}, with other contact details",
     "burst": "{n} near-identical applications are already held",
 }
 
@@ -65,6 +67,7 @@ def prints(app: dict[str, Any]) -> Case:
         "when": {"windows": list((app.get("timing") or {}).get("windows") or [])},  # the ten minutes it arrived in
     }  # fmt: skip
     who = {"name": _name(str(app.get("name") or "")), "label": str(app.get("label") or ""), "id": str(app.get("id"))}
+    held["named"] = {"full_name": who["name"]}  # so that the same name can be found under other contact details
     tag = json.dumps([who["name"], who["label"], who["id"]])  # who it is, carried in each part and weighing nothing
     case = {part: {"s": kept | {f"{part}_who": tag}} for part, roles in held.items()
             if (kept := {k: v for k, v in roles.items() if v})}  # fmt: skip
@@ -99,6 +102,8 @@ def compared(ask: Ask, case: Case) -> dict[str, Any]:
     near: dict[str, Any] = {}
     flags: list[str] = []
     crowd = together = 0
+    namesakes: set[str] = set()
+    by_contact: set[str] = set()
     for part in PARTS:
         if part not in case:
             continue
@@ -109,11 +114,18 @@ def compared(ask: Ask, case: Case) -> dict[str, Any]:
         if part == "when":
             together = len(close)
             continue
+        if part == "named":
+            namesakes = {n["id"] for n in close if n["name"] == me["name"]}
+            continue
+        if part == "contact":
+            by_contact = {n["id"] for n in close}
         if close:
             same = close[0]["name"] == me["name"]
             flags.append("applied_before" if same else {"contact": "shared_contact"}.get(part, f"same_{part}"))
         crowd = max(crowd, len(close) if part != "contact" else 0)
     flags = list(dict.fromkeys(flags)) + (["burst"] if crowd >= BURST else [])
+    if "contact" in case and namesakes - by_contact and "applied_before" not in flags:
+        flags.append("same_name_other_contact")  # this name is held, but not with any of these contact details
     first = next(iter(near.values()), {"who": ""})
     said = [SAID[f].format(who=near.get(_part(f), first)["who"], n=crowd) for f in flags]
     return {"near": near, "flags": flags or ["none"], "found": said or ["nothing like it is held"],
@@ -121,4 +133,5 @@ def compared(ask: Ask, case: Case) -> dict[str, Any]:
 
 
 def _part(flag: str) -> str:
-    return {"same_history": "history", "same_words": "words", "shared_contact": "contact"}.get(flag, "history")
+    parts = {"same_history": "history", "same_words": "words", "shared_contact": "contact", "same_name_other_contact": "named"}
+    return parts.get(flag, "history")
