@@ -32,14 +32,25 @@ SCALES: frozenset[str] = frozenset(name for name, schema, _ in reading2.FACTS if
 
 
 def fired(a: dict[str, Any]) -> list[str]:
-    """Which signals fire on a reading, each on its own: one is enough to flag."""
+    """Which signals fire on a reading, each on its own: one is enough to flag. Set on the seen sets' seed (design
+    run 1), where a first, wider version flagged 60% of real people:
+    - location: the phone or the email's time does not fit the stated home. Not `places` alone: on the seed it fired
+      on 7% of real resumes, most of them an artefact of the contact blocks code gave them.
+    - name: the email address is named for someone else (2 of 300 real, 62 of 176 fraud-shaped).
+    - address: a mail drop or virtual office, or an address in another place than the home (2 real, 32 fraud).
+    - aligned: only that something named did not exist when the resume says it did, and the agent is not unsure of
+      it. NOT dates or study against work: on the seed, dates that do not line up were found in 46% of real
+      resumes and 30% of the fraud-shaped ones. Real people's dates are messier than built ones. Those facts stay
+      in Ada's model, to be weighed with the rest, and never flag alone.
+    - built: employers described vaguely with at most one checkable claim (vague employers: 1 of 300 real, 47 of 176
+      fraud). Not 'mirrors a posting' or 'generic': real resumes scored as high."""
     wrong = "does_not_line_up"
     found = {
-        "location": a["places"] == wrong or a["phone"] == "does_not_fit_the_location" or a["email_time"] == "does_not_fit_the_location",
+        "location": a["phone"] == "does_not_fit_the_location" or a["email_time"] == "does_not_fit_the_location",
         "name": a["name_and_email"] == "another_name",
         "address": a["postal_address"] in ("mail_drop_or_virtual", "does_not_fit_the_location"),
-        "aligned": any(a[f] == wrong for f in PARTS["aligned"]),
-        "built": a["mirrors_a_posting"] >= 2 and (a["employers"] == "vague" or a["generic_body"] == 3),
+        "aligned": a["existed_then"] == wrong and a.get("existed_then_sure") in ("fairly_sure", "sure"),
+        "built": a["employers"] == "vague" and a["checkable_claims"] <= 1,
     }
     return [part for part, there in found.items() if there]
 

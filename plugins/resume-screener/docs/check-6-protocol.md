@@ -113,4 +113,41 @@ least 90% of the time; at most 5% of controls flagged by any of them.
 
 ## Results
 
-Not run yet.
+### Design, on the seen sets only (2026-11-24)
+
+Claude Sonnet 5.5 read the 1,280 seen texts with the fraud reading. Ada: 976 seeded (300 `lc`, 100 `lc-polished`,
+200 `gen`, 200 `lc-fake`, 176 `fraud-seen`), learning run, 304 validation texts decided.
+
+**What the seed showed that the plan had wrong.** The plan took "dates that do not line up" as a mark of fraud. On
+the seed the agent found them in **46% of real resumes and 30% of the fraud-shaped ones**: real people's dates
+overlap, contradict and trail off far more than built ones do. The same holds for study against work. So those
+facts stay in Ada's model, where they are weighed with everything else, and they never flag on their own. The
+first firing rules, which let them, flagged 60% of real people on validation (design run 1). The narrowed rules
+(reasons in `checks/facts/fraud_check.py`): a phone or email time that does not fit the home; an email address
+named for someone else; a mail drop or an address elsewhere; something that did not exist when the resume says it
+did; vague employers with nothing checkable.
+
+A flaw in the control: the contact blocks code gave to half the real resumes name a home at random, so on some of
+them the agent rightly found the home not fitting the jobs' places. `places` alone therefore does not fire; it
+stays in the model.
+
+**Design run 2 (frozen), validation texts, never seeded:**
+
+| Set | n | Ada says fake | A signal fired | Flagged (either) |
+|---|---|---|---|---|
+| `lc` real | 80 | 2 | 6 | 8 (10%) |
+| `lc-polished` real | 40 | 3 | 5 | 7 (17.5%) |
+| `fraud-seen` | 64 | 53 | 55 | 59 (92%) |
+| of those, careful | 32 | 29 | 26 | 30 (94%) |
+| `gen`, invented, nothing planted | 60 | 59 | 1 | 59 (98%) |
+| `lc-fake`, invented, nothing planted | 60 | 59 | 0 | 59 (98%) |
+
+Beside it on the same validation texts: layout only, real 89% right and fakes 95%; words only, real 43% and fakes
+88%; Claude alone, real 93% and fakes 50% (it passed 75% of our generator's fakes and 65% of the `lc`-form ones as
+genuine, and caught 88% of the fraud-shaped ones). Layout still separates the **seen** sets, as before; the test
+is whether it does on the unseen ones.
+
+What Ada's learning weighs most: how the employers are given (1.00), the schools (0.86), loose ends (0.77),
+unrelated work (0.77), short stints (0.70), the career's shape (0.67), dates (0.62), one-off details (0.62).
+
+None of this is the result. The result is the unseen test, run once with this design.
