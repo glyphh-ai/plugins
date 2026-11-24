@@ -333,7 +333,57 @@ was tested. The GitHub set is about 20 resumes of one kind of person.
 
 ### Results
 
-Not run yet.
+Run on 2026-11-24 on a local Ada (the kernel behind Ada Cloud's API and workers, in a throwaway test database). A
+first attempt stopped on a fault in the check's own reading of a local file, before it printed or wrote any
+number; that line was fixed and this is the one run that finished. 1,560 fakes and 1,560 real were held.
+
+**In one sentence: the model tells "like our generator" from "like that resume website". It does not tell real
+people from fakes, and it must not be read as if it did.**
+
+| Asked (never held) | Read as fakes | Between | Read as real | Ada decided | Ada unsure |
+|---|---|---|---|---|---|
+| 300 held-out fakes | **300 (100%)** | 0 | 0 | fake 300 | 0 |
+| 300 held-out real (the website's) | 2 | 106 | **192 (64%)** | real 288, fake 12 | 39 |
+| of those, 119 in categories like the fakes' roles | 0 | 36 | 83 (70%) | real 115, fake 4 | 14 |
+| 18 resumes their authors published (GitHub) | **12** | 6 | **0** | fake 13, real 5 | 8 |
+| 28 other resumes, authorship unknown (PDFs) | 5 | 18 | 5 | fake 12, real 16 | 12 |
+| 176 of another program's applications | 163 (93%) | 13 | 0 | fake 200 of 200 | 5 |
+
+(Of the other sources, 1 of 19 GitHub resumes, 29 of 57 PDFs and 24 of 200 of the other program's had no
+experience section the reader could find, and were not compared.)
+
+The closeness numbers, median (5th to 95th percentile):
+
+| | closest fake | closest real |
+|---|---|---|
+| held-out fakes | 0.42 (0.29 to 0.53) | 0.12 (0.09 to 0.17) |
+| held-out real | 0.13 (0.10 to 0.17) | 0.16 (0.12 to 0.23) |
+| GitHub resumes | 0.12 (0.09 to 0.21) | 0.11 (0.09 to 0.12) |
+
+Against the bar:
+
+1. **Held-out rows: missed on the real side.** Every held-out fake read as a fake. Only 64% of held-out real read
+   as real (the bar was 90%); most of the rest were "between the two". Ada's own decision did better (96% real),
+   and asked about 39 of them.
+2. **The format control: format alone separates the two sets.** A model that saw none of the words, only how the
+   summary and duties are laid out, was right on 599 of 600. So nothing in result 1 can be read as "real against
+   fake": the two sets differ in ways that have nothing to do with who wrote them.
+3. **Other sources: the model is telling two sources apart.** Of 18 resumes that real people wrote and published
+   themselves, none read as real; 12 read as fakes. That is the opposite of what a real-against-fake model would
+   say.
+
+What the numbers show. The fakes are very like each other (a held-out fake's nearest fake is 0.42 alike); the real
+resumes are hardly more like each other than like anything else (0.16 against 0.13). So "near the fakes" means
+"near this generator's applications", which the model finds every time, and "near the real ones" means little: a
+real person's resume from anywhere but that website is not near them, and falls to whichever side is a hair
+closer. Ada's confidence does not reflect this: it was 100% on the two examples looked at, with a nearest precedent
+only 0.40 and 0.21 alike.
+
+What follows for use. With the fakes that ship, the check can say "this reads like the generated examples" and be
+right about text from that generator. It cannot say "this is a real person", and with a real side from one website
+it wrongly calls other real people fake. A real side made of your own past applicants, in your own roles and
+formats, may do better; that has not been tested, and until it is, treat "reads like real people" as "reads like
+the real ones I loaded".
 
 ## Not checked at all
 

@@ -107,7 +107,7 @@ def others_sources(folder: Path) -> dict[str, list[dict[str, Any]]]:
     out: dict[str, list[dict[str, Any]]] = {}
     pdfs = folder / "public" / "d4rk3r-resumes-raw-pdf" / "sample.jsonl"
     if pdfs.exists():
-        rows = [json.loads(line) for line in pdfs.read_text().splitlines()]
+        rows = [json.loads(line) for line in pdfs.read_text().split("\n") if line.strip()]
         english = [r for r in rows if sum(c.isascii() for c in r["text"]) / len(r["text"]) > 0.97]
         out["other resumes, authorship unknown (d4rk3r PDFs, English)"] = [one(r["id"], "", "", "", r["text"]) for r in english]
     texts = sorted((folder / "text").glob("*.txt")) if (folder / "text").exists() else []

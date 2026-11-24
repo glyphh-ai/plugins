@@ -75,5 +75,12 @@ be compared with fakes, and the answer says so.
 
 It measures word overlap with what it holds. The fakes come from one generator; whatever real ones you load come
 from your own inbox. It can therefore tell "like the fakes it holds" from "like the real ones it holds". Whether
-that is the same as "fake" and "real" is a separate question, and the check for it, with its result, is in
-[checks.md](checks.md) (check 4). Read that before relying on a number.
+that is the same as "fake" and "real" is a separate question, and the check for it is in [checks.md](checks.md)
+(check 4).
+
+**The check's result, plainly: it is not the same.** With the shipped fakes and a real side taken from one resume
+website, the model found every unseen fake, but a format-only control separated the two sets just as well (599 of
+600), and of 18 resumes that real people published themselves, none read as real and 12 read as fakes. The model
+tells "like this generator" from "like that website". It is a fair reading of "reads like the generated examples";
+it is not a detector of real people. Ada's confidence was 100% on answers whose nearest precedent was only 0.2 to
+0.4 alike, so the confidence should not be leaned on either.

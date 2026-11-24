@@ -108,10 +108,12 @@ def test_the_examples_that_ship_are_each_models_cases_and_a_setup_loads_them_onc
 
     loaded = {name: seed.examples(name) for name in steps.models()}
     assert {name: len(cases) for name, cases in loaded.items()} == {
-        "files": 0, "fit": 1980, "greenhouse": 0, "made": 1980, "others": 1980, "timing": 0}  # fmt: skip
+        "closeness": 1980, "files": 0, "fit": 1980, "greenhouse": 0, "made": 1980, "others": 0, "timing": 0}  # fmt: skip
     assert {c["outcome"] for c in loaded["fit"]} == {"strong", "borderline", "poor"}
     assert {c["outcome"] for c in loaded["made"]} == {"some", "mostly", "fully"}
-    assert {c["outcome"] for c in loaded["others"]} == {"alone"} and all("when" not in c["data"] for c in loaded["others"])
+    # Every example is a fake and is held as one; the others model holds only what the person screens.
+    assert {c["outcome"] for c in loaded["closeness"]} == {"fake"}
+    assert {c["data"]["side"]["s"]["is"] for c in loaded["closeness"]} == {"fake"}
     assert len({c["data"]["key"]["s"]["id"] for c in loaded["fit"]}) == 1980  # each its own id: loading twice adds none
 
     class Model:
@@ -140,8 +142,9 @@ def test_the_examples_that_ship_are_each_models_cases_and_a_setup_loads_them_onc
 
     ada, said = Ada(), []
     seed.setup(ada, "mine-", said.append)
-    assert sorted(ada.made) == [f"mine-{n}" for n in ("files", "fit", "greenhouse", "made", "others", "timing")]
-    assert (len(ada.made["mine-fit"].held), ada.made["mine-fit"].learned, ada.made["mine-others"].learned) == (1980, 1, 0)
+    assert sorted(ada.made) == [f"mine-{n}" for n in ("closeness", "files", "fit", "greenhouse", "made", "others", "timing")]
+    assert (len(ada.made["mine-fit"].held), ada.made["mine-fit"].learned, ada.made["mine-others"].held) == (1980, 1, [])
+    assert (len(ada.made["mine-closeness"].held), ada.made["mine-closeness"].learned) == (1980, 0)
     assert "mine-fit: learned" in said and "mine-files: made" in said
     seed.setup(ada, "mine-", said.append)  # again: nothing is made twice, the examples are sent again, learning runs
     assert "mine-fit: already there" in said and ada.made["mine-fit"].learned == 2

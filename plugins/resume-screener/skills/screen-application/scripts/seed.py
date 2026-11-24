@@ -66,7 +66,8 @@ def load(ada: Any, name: str, cases: list[dict[str, Any]]) -> None:
         ada.model(name).record_many(cases[at : at + CHUNK])
 
 
-def setup(ada: Any, prefix: str = steps.PREFIX, say: Any = print, real_from: Path | None = None) -> None:
+def setup(ada: Any, prefix: str = steps.PREFIX, say: Any = print, real_from: Path | None = None,
+          source: str = "your own applicants") -> None:  # fmt: skip
     """`ada` is the SDK's client (glyphh.Ada)."""
     have = {m.name for m in ada.models()}
     for name, model in steps.models().items():
@@ -84,7 +85,7 @@ def setup(ada: Any, prefix: str = steps.PREFIX, say: Any = print, real_from: Pat
             ada.model(full).learn()
             say(f"{full}: learned")
     if real_from is not None:
-        cases = real(real_from)
+        cases = real(real_from, source)
         load(ada, prefix + "closeness", cases)
         say(f"{prefix}closeness: {len(cases)} real resumes loaded from {real_from}")
 
@@ -93,10 +94,11 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--prefix", default=steps.PREFIX, help="what your models' names begin with")
     parser.add_argument("--real", help="a folder of your own past real applicants' resumes (PDF, DOCX or text)")
+    parser.add_argument("--source", default="your own applicants", help="what a real one is shown as: never a name")
     args = parser.parse_args()
     from glyphh import Ada
 
-    setup(Ada(), args.prefix, real_from=Path(args.real) if args.real else None)
+    setup(Ada(), args.prefix, real_from=Path(args.real) if args.real else None, source=args.source)
 
 
 if __name__ == "__main__":
