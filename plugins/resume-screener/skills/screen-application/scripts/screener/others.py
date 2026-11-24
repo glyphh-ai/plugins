@@ -17,11 +17,13 @@ from . import resumes, sections
 Case = dict[str, Any]
 Ask = Callable[[Case], list[dict[str, Any]]]  # a part of a case: the nearest held (`nearest`), nearest first
 PARTS: tuple[str, ...] = ("history", "words", "contact", "when")
-CEILING: dict[str, float] = {"history": 0.9, "words": 0.9, "contact": 0.3, "when": 0.15}  # chosen on the design runs
+CEILING: dict[str, float] = {"history": 0.9, "words": 0.47, "contact": 0.3, "when": 0.15}  # chosen on the design runs
 BURST: int = 3  # this many held applications as near as the ceiling make a burst
 TOP: int = 8
 PHONE: re.Pattern[str] = re.compile(r"(?<![\d-])(?:\+?\d{1,3}[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}(?!\d)")  # not a span of years
-LINK: re.Pattern[str] =re.compile(r"(?:https?://|www\.)[^\s)>\],]+", re.I)
+LINK: re.Pattern[str] = re.compile(r"(?:https?://|www\.)[^\s)>\],]+", re.I)
+# An address whole, an apostrophe in its name part too: read without it, every O'Brien's address is the same one.
+EMAIL: re.Pattern[str] = re.compile(r"[\w.+'-]+@[\w-]+(?:\.[\w-]+)+")
 SAID: dict[str, str] = {
     "same_history": "the same work history as {who}, under another name",
     "same_words": "the same phrasing as {who}, under another name",
@@ -38,7 +40,7 @@ def _name(said: str) -> str:
 def contacts(said: str) -> dict[str, list[str]]:
     """The phones (their last ten digits), email addresses, each address's name part without its digits, and links."""
     digits = {re.sub(r"\D", "", p)[-10:] for p in PHONE.findall(said)}
-    emails = {e.lower() for e in resumes.EMAIL.findall(said)}
+    emails = {e.lower() for e in EMAIL.findall(said)}
     handles = {re.sub(r"[^a-z]", "", e.split("@")[0]) for e in emails}
     links = {m.lower().rstrip("/.") for m in LINK.findall(said)}
     found = {"phones": digits, "emails": emails, "handles": handles, "links": links}

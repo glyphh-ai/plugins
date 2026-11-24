@@ -35,13 +35,16 @@ You also need:
 
 ## Set up your models
 
+Ask Claude to "set up the Resume Screener", or run it yourself:
+
 ```
-cd plugins/resume-screener/skills/screen-application/scripts
-python seed.py                    # makes the six models, empty
-python seed.py --corpus <folder>  # and loads examples into fit, made and others
+pip install glyphh pypdf
+glyphh login
+python plugins/resume-screener/skills/screen-application/scripts/seed.py
 ```
 
-Or ask Claude to "set up the Resume Screener": the skill makes the models through the connector.
+It makes six models in your account, loads the examples that ship with the plugin, and runs Ada's learning. It
+takes a few minutes and can be run again safely.
 
 The models, all in your own account:
 
@@ -49,17 +52,16 @@ The models, all in your own account:
 |---|---|---|
 | `screener-timing` | fine or suspect, from the email's timestamps | nothing: learns from your answers |
 | `screener-files` | fine or suspect, from what the files themselves say | nothing: learns from your answers |
-| `screener-others` | holds every application seen; Ada's nearest ones are compared | the examples, when seeded |
+| `screener-others` | holds every application seen; Ada's nearest ones are compared | the 1,980 examples |
 | `screener-greenhouse` | fine or suspect, from the candidate's Greenhouse record | nothing: learns from your answers |
-| `screener-fit` | strong, borderline or poor | the examples, when seeded |
-| `screener-made` | how much reads as generated: some, mostly, fully | the examples, when seeded |
+| `screener-fit` | strong, borderline or poor | the 1,980 examples |
+| `screener-made` | how much reads as generated: some, mostly, fully | the 1,980 examples |
 
-Their specs, with weights, are in [`skills/screen-application/models`](skills/screen-application/models).
+Their specs, with weights, are in [`skills/screen-application/models`](skills/screen-application/models), and the
+examples beside them in `models/examples`: each model's cases with their outcomes, one a line.
 
-**The examples.** `seed.py --corpus` reads a folder of applications (`manifest.jsonl` and
-`files/<id>/email.eml`) and loads its train split. The corpus the checks used (2,430 generated applications) is
-not in this repository and is not published yet; write to support@glyphh.ai. Without examples the models start
-empty and Ada asks you about every application until it has precedents.
+**Every example is a generated, fictional application.** A program wrote them; no real person is in them. They
+are the train split of the corpus the checks used; its test split is not here.
 
 ## Use
 

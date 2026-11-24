@@ -14,8 +14,8 @@ from email.utils import format_datetime
 from pathlib import Path
 from typing import Any
 
+import corpus as seed
 import rings
-import seed
 from screener import others, steps, timing
 
 Ada = Callable[..., Awaitable[Any]]

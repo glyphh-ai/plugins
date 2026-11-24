@@ -24,13 +24,18 @@ anything.
 ## Before the first screening: the models
 
 Call `ada_models`. The screener's six models are named `screener-fit`, `screener-files`, `screener-timing`,
-`screener-others`, `screener-made` and `screener-greenhouse`. For each one that is missing, read its file in
-`models/` (`fit.json`, ...) and call `ada_model_create` with `name` (`screener-` and the file's name) and `spec` (the
-file's `spec`, with its `name` set to the same). Or run `python scripts/seed.py`, which makes all six.
+`screener-others`, `screener-made` and `screener-greenhouse`. If any is missing, set the screener up:
 
-To start with examples, the person runs `python scripts/seed.py --corpus <folder>` (see the plugin's README for the
-corpus): it loads a train split into `screener-fit`, `screener-made` and `screener-others` and runs Ada's learning.
-`screener-files`, `screener-timing` and `screener-greenhouse` always start empty and learn from the person alone.
+```
+pip install glyphh pypdf
+glyphh login          # once; or set GLYPHH_API_KEY
+python scripts/seed.py
+```
+
+It makes the six models in the person's own account, loads the examples that ship with the plugin (1,980
+generated, fictional applications) into `screener-fit`, `screener-made` and `screener-others`, and runs Ada's
+learning. It takes a few minutes and can be run again safely. `screener-files`, `screener-timing` and
+`screener-greenhouse` start empty and learn from the person alone. Tell the person what it did.
 
 ## The steps
 

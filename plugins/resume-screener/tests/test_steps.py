@@ -103,6 +103,50 @@ def test_the_others_step_names_what_adas_nearest_show() -> None:
     assert others.contacts("call (239) 288-8104 or kei.dub8@x.example, www.site.example/me")["handles"] == ["keidub"]
 
 
+def test_the_examples_that_ship_are_each_models_cases_and_a_setup_loads_them_once() -> None:
+    import seed
+
+    loaded = {name: seed.examples(name) for name in steps.models()}
+    assert {name: len(cases) for name, cases in loaded.items()} == {
+        "files": 0, "fit": 1980, "greenhouse": 0, "made": 1980, "others": 1980, "timing": 0}  # fmt: skip
+    assert {c["outcome"] for c in loaded["fit"]} == {"strong", "borderline", "poor"}
+    assert {c["outcome"] for c in loaded["made"]} == {"some", "mostly", "fully"}
+    assert {c["outcome"] for c in loaded["others"]} == {"alone"} and all("when" not in c["data"] for c in loaded["others"])
+    assert len({c["data"]["key"]["s"]["id"] for c in loaded["fit"]}) == 1980  # each its own id: loading twice adds none
+
+    class Model:
+        def __init__(self, held: list[Any]) -> None:
+            self.held, self.learned = held, 0
+
+        def record_many(self, cases: list[Any]) -> None:
+            self.held += cases
+
+        def learn(self) -> None:
+            self.learned += 1
+
+    class Ada:
+        def __init__(self) -> None:
+            self.made: dict[str, Model] = {}
+
+        def models(self) -> list[Any]:
+            return [type("Info", (), {"name": name})() for name in self.made]
+
+        def create_model(self, name: str, spec: dict[str, Any]) -> None:
+            assert spec["name"] == name and name not in self.made
+            self.made[name] = Model([])
+
+        def model(self, name: str) -> Model:
+            return self.made[name]
+
+    ada, said = Ada(), []
+    seed.setup(ada, "mine-", said.append)
+    assert sorted(ada.made) == [f"mine-{n}" for n in ("files", "fit", "greenhouse", "made", "others", "timing")]
+    assert (len(ada.made["mine-fit"].held), ada.made["mine-fit"].learned, ada.made["mine-others"].learned) == (1980, 1, 0)
+    assert "mine-fit: learned" in said and "mine-files: made" in said
+    seed.setup(ada, "mine-", said.append)  # again: nothing is made twice, the examples are sent again, learning runs
+    assert "mine-fit: already there" in said and ada.made["mine-fit"].learned == 2
+
+
 def test_the_verdict_is_real_person_suspect_or_unsure_by_its_rule() -> None:
     clean = steps.compare(read(), {})
     real = steps.verdict(clean, {"fit": FIT, "timing": UNSURE, "files": UNSURE})

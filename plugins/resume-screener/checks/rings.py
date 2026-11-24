@@ -47,7 +47,7 @@ def renamed(parts: dict[str, str], n: int) -> dict[str, str]:
     email, phone = f"{first}.{last}{n}@postbox.example".lower(), f"(555) 01{n % 10}-{1000 + n:04d}"
     out = {}
     for key, said in parts.items():
-        said = resumes.EMAIL.sub(email, others.PHONE.sub(phone, said))
+        said = others.EMAIL.sub(email, others.PHONE.sub(phone, said))
         for old, new in zip((was[:1] + was[-1:]) if len(was) > 1 else [], (first, last), strict=False):
             said = re.sub(rf"\b{re.escape(old)}\b", new, said)
         out[key] = said

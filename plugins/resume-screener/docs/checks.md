@@ -178,7 +178,21 @@ are messier, and what a real person would answer is not known.
 
 ### Results
 
-Not run yet.
+Run on 2026-11-24 on a local Ada (the kernel behind Ada Cloud's API and workers, in a throwaway test database).
+
+- **2a.** All timing tests pass (`tests/test_timing.py`, 7 tests).
+- **2b, design (groups 0 to 9).** Two arrivals that share both of their ten-minute names score 1.0; one name, 0.22
+  to 0.28; none, 0.02 to 0.05. The first guess for the ceiling (0.4) counted only the first kind and named a burst
+  for 9 of 10 near messages. The ceiling was set to 0.15, between "one name" and "none", and frozen
+  (`screener/others.py`).
+- **2b, held-out (groups 10 to 39), run once.** A burst was named for **30 of 30** near messages (each counted
+  with all 5 of its group) and for **0 of 30** far ones. Bar met (at least 95% and at most 5%).
+- **2c, run once.** 40 taught, 20 asked: **20 of 20** answered as taught (10 `fine`, 10 `suspect`); Ada was unsure
+  of 4 of the 20, and the person would have been asked about those. Bar met (at least 18). In the crafted set 10 of
+  the 60 also fell at an odd hour on the sender's clock, by chance of the seed.
+
+What these show: the arrival windows work as designed on arrivals placed by code, and an empty timing model
+repeats a clean rule after 40 answers. What they do not show: anything about real emails or real applicants.
 
 ## Check 3: the plugin end to end in Claude
 
