@@ -14,7 +14,17 @@ import reading
 from screener import closeness, steps
 
 Ada = Callable[..., Awaitable[Any]]
-DROPPED: frozenset[str] = frozenset()  # facts of the reading the model does not use; decided on the seen sets
+# Facts of the reading the model does not use, decided on the seen sets' seed (design run 1). A fact is kept only
+# if it is about the person and not about how the text was produced: it must tell real from fake on the seed, and it
+# must survive polishing (the same people's resumes before and after an AI rewrite, `lc` against `lc-polished`,
+# must answer it much alike).
+# - dates, jobs: how a source writes things down (our generator's examples carry years and one or two jobs).
+# - letter: the same for every text here (no real cover letters).
+# - numbers, round_numbers, stock_phrases: told nothing apart (Ada's learning gave each under 0.05).
+# - slips, evenness_of_writing: the strongest on the seed, and thrown out: they flip when a real person's resume
+#   is polished (slips of 2 or 3: 82% of lc, 23% of lc-polished), so they measure the surface, not the person.
+DROPPED: frozenset[str] = frozenset(("dates", "jobs", "letter", "numbers", "round_numbers", "stock_phrases", "slips",
+                                     "evenness_of_writing"))  # fmt: skip
 LAYERS: dict[str, tuple[str, ...]] = {
     "timeline": ("jobs", "dates", "overlaps", "gaps", "tenures", "short_stints", "path"),
     "unevenness": ("unrelated_work", "loose_ends", "education_path"),

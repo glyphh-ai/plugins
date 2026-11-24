@@ -110,4 +110,58 @@ bag of words.
 
 ## Results
 
-Not run yet.
+### What was obtained (2026-11-24)
+
+Both hoped-for sets were obtained and join the unseen test as planned: `up` (the "UpdatedResumeDataSet": 146
+distinct resumes of 600 characters or more, Indian IT market, to 2019; 100 of them carry encoding damage, kept as
+given) and the LREC 2026 corpus from FIU Dataverse (CC BY-NC 4.0; distinct texts: 139 authentic, 125 AI-generated
+by Gemini, Meta and ChatGPT, 139 AI-enhanced). `gh` is 19 resumes. Sizes on the seen side are as aimed at.
+
+### Design, on the seen sets only (the unseen test has not been read, by the agent or by anyone)
+
+Claude Sonnet 5.5 read the 1,040 seen texts with the first schema (23 facts). Ada: 800 seeded (300 `lc`, 100
+`lc-polished`, 200 `gen`, 200 `lc-fake`), learning run, 240 validation texts decided.
+
+**Design run 1, all 23 facts:** real 92.5%, fake 95.0%, polished 87.5%. Ada's learning put the most weight on how
+even the writing is and on slips.
+
+**What was dropped, and why** (reasons in `checks/facts/facts_check.py`): a fact is kept only if it is about the
+person and not about how the text was produced. `slips` and `evenness_of_writing` were the strongest and were
+dropped: they flip when the same real person's resume is polished (slips of 2 or 3: 82% of `lc`, 23% of
+`lc-polished`). `dates` and `jobs` follow how a source writes things down. `letter` is the same everywhere.
+`numbers`, `round_numbers` and `stock_phrases` told nothing apart. 15 facts are kept.
+
+**Design run 2, the 15 kept facts (frozen):**
+
+| Validation set (never seeded) | Decided as labelled | Ada would ask |
+|---|---|---|
+| `lc` real, 80 | 73 (91%) | 2 |
+| `lc-polished` real, 40 | 35 (87.5%) | 2 |
+| `gen` fake, 60 | 56 (93%) | 3 |
+| `lc-fake` fake, 60 | 57 (95%) | 4 |
+
+What Ada's learning weighs most: one-off details (1.00), the shape of the career path (0.99), loose ends (0.87),
+named things (0.80), unrelated work (0.77), how neatly it fits one role (0.73).
+
+Beside it on the same validation texts (run 1):
+
+| | real | fake |
+|---|---|---|
+| The facts model | 91% | 94% |
+| Layout only | 89% | 92.5% |
+| Words only (check 4's model, same seed) | 61% | 97% |
+| Claude alone | 99% | 57% |
+
+- **Layout alone still separates the seen sets.** That is expected and is not the test: the seen sources differ
+  in form. The bar is on the unseen test, where the fakes were written in the reals' own form.
+- **Claude alone calls most things real**: it passed 62% of our generator's fakes and 25% of the `lc`-form fakes as
+  real people.
+- **How much of the source the facts still carry:** told `lc` from `lc-polished` on 79 of 120 (two thirds of them
+  are `lc`, so this is chance: polishing does not move the kept facts). Told `gen` from `lc-fake` on 105 of 120:
+  the facts still tell our generator's examples from the other fakes, partly because the examples were rebuilt
+  from parts and lost their dates.
+
+Confidence on validation (run 2): of 189 decided at 90% or more, 97% were right; 26 at 80 to 90%, 77% right; 14 at
+70 to 80%, 71% right.
+
+None of this is the result. The result is the unseen test, run once with this design.
