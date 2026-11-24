@@ -16,9 +16,11 @@ from . import resumes, sections
 
 Case = dict[str, Any]
 Ask = Callable[[Case], list[dict[str, Any]]]  # a part of a case: the nearest held (`nearest`), nearest first
-PARTS: tuple[str, ...] = ("history", "words", "contact", "when", "named")
-# Chosen on the design runs; `named` is the same name exactly.
-CEILING: dict[str, float] = {"history": 0.9, "words": 0.47, "contact": 0.3, "when": 0.15, "named": 0.99}
+PARTS: tuple[str, ...] = ("history", "words", "body", "contact", "when", "named")
+# Chosen on the design runs; `named` is the same name exactly. `body` is the whole resume's words whatever its layout
+# (a resume with no headings the reader knows has no `words`): its ceiling is check 7's, set on its design run.
+CEILING: dict[str, float] = {"history": 0.9, "words": 0.47, "body": 0.8, "contact": 0.3, "when": 0.15, "named": 0.99}
+BODY_WORDS: int = 400
 BURST: int = 3  # this many held applications as near as the ceiling make a burst
 TOP: int = 8
 PHONE: re.Pattern[str] = re.compile(r"(?<![\d-])(?:\+?\d{1,3}[\s.-]?)?\(?\d{3}\)?[\s.-]?\d{3}[\s.-]?\d{4}(?!\d)")  # not a span of years
@@ -31,6 +33,7 @@ SAID: dict[str, str] = {
     "shared_contact": "a contact detail shared with {who}, another name",
     "applied_before": "the same person as {who}, applying again",
     "same_name_other_contact": "the same name as {who}, with other contact details",
+    "same_body": "the same resume as {who}, word for word or nearly, under another name",
     "burst": "{n} near-identical applications are already held",
 }
 
@@ -47,6 +50,14 @@ def contacts(said: str) -> dict[str, list[str]]:
     links = {m.lower().rstrip("/.") for m in LINK.findall(said)}
     found = {"phones": digits, "emails": emails, "handles": handles, "links": links}
     return {k: sorted(v for v in vs if len(v) > 3) for k, vs in found.items()}
+
+
+def body(resume: str, name: str) -> str:
+    """The resume's words whatever its layout, with who it is taken out: no email addresses, phone numbers, links
+    or digits, none of the name's own words, lower case, its first BODY_WORDS words."""
+    said = LINK.sub(" ", EMAIL.sub(" ", PHONE.sub(" ", resume))).lower()
+    mine = set(name.split())
+    return " ".join([w for w in re.findall(r"[a-z][a-z'-]*", said) if w not in mine][:BODY_WORDS])
 
 
 def prints(app: dict[str, Any]) -> Case:
@@ -68,6 +79,7 @@ def prints(app: dict[str, Any]) -> Case:
     }  # fmt: skip
     who = {"name": _name(str(app.get("name") or "")), "label": str(app.get("label") or ""), "id": str(app.get("id"))}
     held["named"] = {"full_name": who["name"]}  # so that the same name can be found under other contact details
+    held["body"] = {"body_text": body(resume, who["name"])}
     tag = json.dumps([who["name"], who["label"], who["id"]])  # who it is, carried in each part and weighing nothing
     case = {part: {"s": kept | {f"{part}_who": tag}} for part, roles in held.items()
             if (kept := {k: v for k, v in roles.items() if v})}  # fmt: skip
@@ -133,5 +145,6 @@ def compared(ask: Ask, case: Case) -> dict[str, Any]:
 
 
 def _part(flag: str) -> str:
-    parts = {"same_history": "history", "same_words": "words", "shared_contact": "contact", "same_name_other_contact": "named"}
+    parts = {"same_history": "history", "same_words": "words", "shared_contact": "contact", "same_name_other_contact": "named",
+             "same_body": "body"}  # fmt: skip
     return parts.get(flag, "history")
