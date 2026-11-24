@@ -1,0 +1,9 @@
+{
+  "name": "glyphh-plugins",
+  "description": "Glyphh templates as Claude plugins: skills, code and Ada model specs that decide with your own Ada models",
+  "owner": {
+    "name": "Glyphh AI",
+    "url": "https://glyphh.ai"
+  },
+  "plugins": []
+}
