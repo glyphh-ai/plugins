@@ -57,6 +57,11 @@ def verdict(args: argparse.Namespace) -> dict[str, Any]:
     app, made = json.loads((work / "app.json").read_text()), json.loads((work / "read.json").read_text())
     told = dict(t.split("=", 1) for t in args.told)
     out = steps.verdict(app, _json(args.answers), told)
+    cases = steps.cases(app)
+    for line in out["person"]["signals"]:  # how the person's answer to a signal Ada was unsure of is recorded
+        if line["says"] == "unsure" and line["signal"] in cases:
+            record = {"name": steps.PREFIX + line["signal"], "data": cases[line["signal"]]}
+            line["teach"] = {"tool": "ada_record", "args": record}
     return out | {"keep": {"model": steps.PREFIX + "others", "data": made["others"], "outcome": "alone"}}
 
 

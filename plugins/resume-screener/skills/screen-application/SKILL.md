@@ -77,9 +77,13 @@ python scripts/screen.py verdict --work <dir> --answers answers.json
 It prints the verdict: `person` (`real person`, `suspect` or `unsure`, and each signal with what it says and what
 it found), `fit`, `made`, and `keep`.
 
-**6. Ask the person, when asked to.** For each signal in `person.ask`, tell the person what that signal found and
-ask: is this fine, or suspect? Record each answer with `ada_record`: `name` the signal's model, `data` the case
-you sent in step 4, `outcome` `fine` or `suspect`. Then run step 5 again with `--told <signal>=<answer>` for each.
+**6. Show the card, and ask the person when asked to.** If the connector has the tool `screener_verdict`, call it
+with the verdict from step 5 (without `keep`): it shows the verdict as a card, and for a signal Ada was unsure of
+the person can answer on the card, which records the answer itself and tells you. Without the card, or when the
+person answers in the chat: for each signal in `person.ask`, tell the person what that signal found and ask: is
+this fine, or suspect? Record each answer with `ada_record`: the signal's `teach.args` (`name` and `data`) and
+`outcome` `fine` or `suspect`. Never record the same answer twice. Then run step 5 again with
+`--told <signal>=<answer>` for each answer given.
 For the `others` signal there is no case to record: only pass `--told others=<answer>`.
 If `fit.ask` is true, ask the person how well the applicant fits (strong, borderline or poor) and record it in
 `screener-fit` the same way. Never record your own guess: only what the person said.
@@ -88,8 +92,7 @@ If `fit.ask` is true, ask the person how well the applicant fits (strong, border
 is compared with this one. If the person told you the application repeats another, record `repeat` instead of
 `alone`. Skip this step if the person asked you not to keep the application.
 
-**8. Tell the person.** If the connector has the tool `screener_verdict`, call it with the verdict from step 5
-(without `keep`): it shows the verdict as a card. Then say, in this order and in plain words:
+**8. Tell the person**, in this order and in plain words:
 
 1. Real person, suspect or unsure, and for each signal what it found and who said so (Ada, with its confidence;
    the rule, when Ada had no close precedent; or the person).

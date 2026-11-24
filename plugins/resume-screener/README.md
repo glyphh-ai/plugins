@@ -74,6 +74,9 @@ In Claude, with the application's files at hand:
 Claude runs the steps in [the skill](skills/screen-application/SKILL.md) and answers with the verdict: real person,
 suspect or unsure, with what each signal found; then the fit; then one line on how it was written.
 
+When the Glyphh connector offers its `screener_verdict` tool, the verdict is also shown as a card, and you can
+answer on the card when Ada is unsure of a signal.
+
 Give it the email as an `.eml` file when you can. The timestamps are in the email's headers; a pasted email
 without them cannot be checked for timing, and the verdict says so.
 

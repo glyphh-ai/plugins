@@ -14,7 +14,8 @@ nothing above a result is changed once it is seen.
 A corpus of 2,430 generated job applications (ten roles; each an email with a cover letter and a resume as PDF and
 as Word files), split 1,980 train and 450 test, labelled with the fit it was written to have (strong, borderline,
 poor) and how much of it a language model wrote (some, mostly, fully). One generator wrote all of it and one
-renderer made every file.
+renderer made every file. The train split ships with the plugin as the models' examples (`models/examples`: each
+model's cases, not the files); the test split ships nowhere.
 
 The 450 test rows were looked at three times while the screener's models were designed (below). **They are not
 used again here.** Every check in this file uses train rows only, with its own held-out part carved from them by a
@@ -69,7 +70,9 @@ carried over without breaking it.
 
 ### Results
 
-Not run yet.
+Run once on 2026-11-24 on a local Ada. **fit 95.3%** (343 of 360; Ada unsure of 32) and **made 65.3%** (235 of
+360; unsure of 107): the same as the earlier build, to the row (the confusion tables are identical). Bar met. The
+plugin reads an application as the earlier build did.
 
 ## Check 1: this application against the others
 
@@ -134,7 +137,43 @@ alarm rate is this corpus's, not a real inbox's.
 
 ### Results
 
-Not run yet.
+Run on 2026-11-24 on a local Ada (the kernel behind Ada Cloud's API and workers, in a throwaway test database).
+
+**Design (100 bases, 100 controls; Ada held 1,580).** Two things were changed on the design rows, then frozen and
+committed before the held-out run:
+
+- The phrasing ceiling went from 0.9 to 0.47. At 0.9 only 31 of 100 `one job changed` rings were caught. On the
+  design rows a control's nearest phrasing reached 0.43 at most, and the weakest ring's (a reworded one) was 0.50.
+- An email address is now read whole when its name part has an apostrophe. Read without it, every O'Brien in the
+  corpus had the same address, and controls were flagged for it.
+
+After both: every design ring line at 96 to 100 of 100, and 6 of 100 design controls flagged. The history ceiling
+(0.9) and the contact ceiling (0.3) stayed as first guessed.
+
+**The one held-out run (150 bases, 150 controls; Ada held 1,830).**
+
+| | Caught | Bar | |
+|---|---|---|---|
+| renamed | 150 of 150 (100%) | 95% | met |
+| reordered | 150 of 150 (100%) | 90% | met |
+| reworded | 150 of 150 (100%) | 80% | met |
+| one job changed | 144 of 150 (96%) | 80% | met |
+| shared contact | 143 of 150 (95.3%) | 95% | met, by one application |
+| burst (flagged as a burst) | 150 of 150 (100%) | 90% | met |
+| **controls flagged (false alarms)** | **7 of 150 (4.7%)** | at most 5% | met, by one application |
+
+The nearest application named was the ring's base for 150, 150, 150, 146 (one job changed) and 139 (shared
+contact) of 150. The 7 flagged controls: 4 for a shared contact detail, 2 for the same phrasing, 1 for the same
+history. On the design rows the flagged controls were looked at: the generator had given two different names the
+same email address, or the same work history. Those are the step doing what it says, on a corpus that repeats
+itself; a real inbox's rate is not known. Another 7 controls were noted as "the same person applying again" (the
+generator reuses names), which is told and never counted as a flag. The 7 `shared contact` rings missed were ones
+whose nearest contact was under the stranger's own name, so they read as the same person applying again.
+
+What this shows: on rings made by code from this corpus, the step finds the copy, and it stays quiet on about 95 in
+100 unrelated applications of the same corpus. Two lines met their bar by a single application, so the true rates
+could sit either side of the bar. What it does not show: that a ring made by people, or disguised on purpose, is
+found; or what the false alarm rate is on real applications.
 
 ## Check 2: the email's timestamps
 
@@ -205,7 +244,26 @@ claimed.
 
 ### Results
 
-Not run yet.
+**Not run.** A headless Claude session could not sign in to the Glyphh connector (it needs a person to sign in),
+so no Claude session has run this plugin against Ada. Whether Claude follows the skill's steps as written is
+unproven.
+
+What was run instead, on 2026-11-24, on a local Ada with two of the fixture applications, is the plugin's code
+around Claude, not Claude:
+
+- **The skill's calls, as connector tool calls.** A script made every call the skill names, in its order, against
+  the server's own MCP endpoint: `ada_models`, `ada_model_create` for the six models, `ada_record_many` (300
+  examples a model, to be quick), then for each application `ada_facts` four times, `ada_decide` four times,
+  `ada_record` to keep it, and `screener_verdict` to show the card. Every call was accepted, the answers were read
+  by the plugin's steps as they came, and both verdicts were produced.
+- **The setup and a screening through the SDK** (`seed.py`, `run.py`), over HTTP: the six models were made, 1,980
+  examples loaded into each of fit, made and others, and learning run; run a second time, nothing doubled (1,980
+  held in each). The two fixtures were then screened: strong fit and poor fit, as their generator wrote them; both
+  "real person" with nothing found by timing or files (a rule's answer: those models hold nothing); screening with
+  `--keep` added exactly one application to `others`.
+
+Both fixtures are train rows, so each met its own example: the fit answers here are a model recognising a case it
+holds, not a test of it, and `others` rightly named each as "the same person applying again".
 
 ## Not checked at all
 
