@@ -1,0 +1,35 @@
+{
+  "question": "Is this application nearer to real people's or to fakes?",
+  "outcomes": ["fake", "real"],
+  "seed": "closeness",
+  "learn": false,
+  "about": "Every role, its encoding, its weight and why: docs/closeness-model.md.",
+  "case": {},
+  "spec": {
+    "name": "closeness",
+    "layers": [
+      {"name": "resume", "similarity_weight": 0.3, "segments": [{"name": "s", "roles": [
+        {"name": "summary", "text_encoding": "bag_of_words", "similarity_weight": 1.0},
+        {"name": "titles", "text_encoding": "bag_of_words", "similarity_weight": 0.5},
+        {"name": "duties", "text_encoding": "bag_of_words", "similarity_weight": 1.0},
+        {"name": "school", "text_encoding": "bag_of_words", "similarity_weight": 0.3},
+        {"name": "skills", "text_encoding": "bag_of_words", "similarity_weight": 0.5},
+        {"name": "resume_who", "similarity_weight": 0}
+      ]}]},
+      {"name": "letter", "similarity_weight": 0.3, "segments": [{"name": "s", "roles": [
+        {"name": "letter", "text_encoding": "bag_of_words", "similarity_weight": 1.0},
+        {"name": "letter_who", "similarity_weight": 0}
+      ]}]},
+      {"name": "side", "similarity_weight": 1.0, "segments": [{"name": "s", "roles": [
+        {"name": "is", "similarity_weight": 1.0}
+      ]}]},
+      {"name": "who", "similarity_weight": 0, "segments": [{"name": "s", "roles": [
+        {"name": "source", "similarity_weight": 0},
+        {"name": "label", "similarity_weight": 0},
+        {"name": "id", "key_part": true, "similarity_weight": 0}
+      ]}]}
+    ],
+    "settings": {"lexicon": false},
+    "output": {"ask_below": 0.7}
+  }
+}

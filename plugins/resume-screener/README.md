@@ -1,14 +1,41 @@
 # Resume Screener
 
-A Glyphh template as a plain Claude plugin. It screens a job application with **your own Ada models**:
+A Glyphh template as a plain Claude plugin, on **your own Ada models**.
 
-1. **Is this a real person?** Answered from independent signals, each its own Ada model:
+## The simple check: how close is this to real people, or to fakes?
+
+Give it a resume and a cover letter (either may be missing). It tells you how close they are to real people's and
+how close to fakes:
+
+> closest fake 0.91, closest real 0.62: reads like the fakes
+
+with the nearest few on each side, Ada's own decision with its confidence, and Ada's fact tree for it.
+
+One Ada model does this, and it is written down in one place: **[docs/closeness-model.md](docs/closeness-model.md)**
+(every role, how it is read, its weight and why). It holds two labelled sets:
+
+- **fakes:** the 1,980 generated, fictional applications that ship with the plugin;
+- **real:** resumes written by people. **None ship.** You load your own past real applicants
+  (`seed.py --real <folder>`): your data, into your own Ada account, nowhere else. Until you do, the model can only
+  say how close an application is to fakes.
+
+**What the check of it showed (check 4 in [docs/checks.md](docs/checks.md)): it tells "like our generator" from
+"like the real ones it was given". It does not tell real people from fakes.** Every unseen fake read as a fake,
+but a control that saw only formatting separated the two sets just as well, and resumes real people published
+themselves read as fakes when the real side came from a different source. "Reads like the fakes" is a fair
+statement about text from this generator. "Reads like real people" means only "like the real ones you loaded".
+
+## The whole application (secondary)
+
+When you ask for more than the resume and cover letter, it also screens the rest of an application:
+
+1. Signals of a real person, each its own Ada model:
    - **the email's timestamps**: the `Date` header against each `Received` hop, their order, the gaps, a date in
      the future, an odd hour on the sender's clock, a burst of applications arriving together;
    - **the files themselves**: hidden, white or tiny text, characters never seen, tracked changes, marks of
      pasting from a chat, the program and author the file names;
-   - **this application against the others seen**: the same work history under another name, the same phrasing,
-     a shared phone or address, a burst of near-identical applications;
+   - **this application against the ones you screened before**: the same work history under another name, the
+     same phrasing, a shared phone or address, a burst of near-identical applications;
    - **Greenhouse signals**, when you have a Greenhouse connector in Claude (unproven, see below);
    - voice recording: **not built** ([docs/voice.md](docs/voice.md)).
 2. **How well do they fit the role?** Strong, borderline or poor, from the resume read section by section.
@@ -41,18 +68,21 @@ Ask Claude to "set up the Resume Screener", or run it yourself:
 pip install glyphh pypdf
 glyphh login
 python plugins/resume-screener/skills/screen-application/scripts/seed.py
+python plugins/resume-screener/skills/screen-application/scripts/seed.py --real <folder of your own real applicants' resumes>
 ```
 
-It makes six models in your account, loads the examples that ship with the plugin, and runs Ada's learning. It
-takes a few minutes and can be run again safely.
+It makes seven models in your account, loads the examples that ship with the plugin, and runs Ada's learning. It
+takes a few minutes and can be run again safely. `--real` reads each resume in the folder (PDF, DOCX or text) and
+records the words of its sections as the real side; nothing of who the person is, is kept.
 
 The models, all in your own account:
 
 | Model | Decides | Starts with |
 |---|---|---|
+| `screener-closeness` | nearer to real people's or to fakes: **the simple check** | the 1,980 examples as fakes; your own as real |
 | `screener-timing` | fine or suspect, from the email's timestamps | nothing: learns from your answers |
 | `screener-files` | fine or suspect, from what the files themselves say | nothing: learns from your answers |
-| `screener-others` | holds every application seen; Ada's nearest ones are compared | the 1,980 examples |
+| `screener-others` | holds the applications you screen; Ada's nearest ones are compared | nothing: only what you screen |
 | `screener-greenhouse` | fine or suspect, from the candidate's Greenhouse record | nothing: learns from your answers |
 | `screener-fit` | strong, borderline or poor | the 1,980 examples |
 | `screener-made` | how much reads as generated: some, mostly, fully | the 1,980 examples |
@@ -65,7 +95,13 @@ are the train split of the corpus the checks used; its test split is not here.
 
 ## Use
 
-In Claude, with the application's files at hand:
+In Claude, with the files at hand:
+
+> Check this resume and cover letter: resume.pdf, cover_letter.docx
+
+or, without Claude, `python .../scripts/check.py --resume resume.pdf --letter cover_letter.docx`.
+
+For the whole application:
 
 > Screen this application: application.eml
 

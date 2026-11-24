@@ -1,17 +1,51 @@
 ---
 name: screen-application
-description: Screen a job application with the person's own Ada models - first whether it comes from a real person (the email's timestamps, the files themselves, the application against the others seen, Greenhouse signals when there are any), then how well it fits the role. Use when the person asks to screen, check or vet a job application, a resume, a cover letter or an applicant's email, asks whether an applicant is real, or asks to set up or seed the Resume Screener.
+description: Check a resume and cover letter against the person's own Ada model - how close they are to real people's and how close to fakes - and, when asked for more, screen the whole application (the email's timestamps, the files themselves, the applications screened before, Greenhouse signals, the fit for the role). Use when the person asks to check, screen or vet a resume, a cover letter, a job application or an applicant's email, asks whether an applicant is real or fake, or asks to set up or seed the Resume Screener.
 ---
 
-# Screen a job application
+# Check a resume and cover letter
 
-You run fixed steps, in a fixed order. Code reads and measures the application; Ada models decide; the person is
-asked when Ada is unsure, and their answer becomes a precedent. You never judge the application yourself and you
-never change a case before it is decided.
+**This is the main path. Use it unless the person asks for the whole application to be screened.**
 
-The first question is always **is this a real person**, answered from independent signals, each its own Ada model.
-How well they fit the role is second. Whether the text reads as AI-written is one line at the end and never changes
-anything.
+One thing in, one thing out: a resume and a cover letter (either may be missing) in; how close they are to real
+people's and how close to fakes out. You judge nothing yourself: code reads the files, the person's `closeness`
+Ada model answers.
+
+```
+pip install glyphh pypdf          # once
+glyphh login                      # once; or set GLYPHH_API_KEY
+python scripts/check.py --resume resume.pdf --letter cover_letter.docx
+```
+
+(Files given without `--resume` / `--letter` are told apart by the script.) If it says the model is missing, set
+the screener up first (below). It prints, for the resume and for the cover letter apart:
+
+- `fake` and `real`: the closeness of the nearest one on each side, from 0 (nothing shared) to 1 (the same), and
+  the nearest few. A fake is named by its generated example's made-up name and role; a real one only by its source
+  and category.
+- `reads`: "reads like the fakes", "reads like real people" or "between the two".
+- `decision`: Ada's own answer, `fake` or `real`, with its confidence, whether it would ask a person first, and
+  its fact tree.
+
+Tell the person, in this order: what it reads like, with the two numbers ("closest fake 0.91, closest real 0.62:
+reads like the fakes"); Ada's decision and confidence; the nearest few on each side; then, if they want it, the
+fact tree as Ada gave it (each layer and role, what this application had, what the nearest had, how alike, and the
+weight). If the connector has the tool `screener_closeness`, call it with exactly what the script printed: it
+shows the same as a card.
+
+Say plainly, every time it applies:
+
+- If `real` has no closeness, the model holds no real resumes yet: it can only say how close this is to fakes.
+  The real side is the person's own past real applicants, loaded with `python scripts/seed.py --real <folder>`.
+- The cover letter is compared apart and never moves the resume's numbers.
+- This is how alike the words are to what the model holds. It is not proof that anyone is real or fake; what was
+  and was not shown is in `docs/checks.md` (check 4) and the model itself is in `docs/closeness-model.md`.
+
+# Screen the whole application
+
+Only when the person asks for more than the resume and cover letter. You run fixed steps, in a fixed order. Code
+reads and measures the application; Ada models decide; the person is asked when Ada is unsure, and their answer
+becomes a precedent. You never judge the application yourself and you never change a case before it is decided.
 
 ## What you need
 
@@ -23,19 +57,24 @@ anything.
 
 ## Before the first screening: the models
 
-Call `ada_models`. The screener's six models are named `screener-fit`, `screener-files`, `screener-timing`,
-`screener-others`, `screener-made` and `screener-greenhouse`. If any is missing, set the screener up:
+The screener's seven models are named `screener-closeness`, `screener-fit`, `screener-files`, `screener-timing`,
+`screener-others`, `screener-made` and `screener-greenhouse` (`ada_models` lists them). If any is missing, set the
+screener up:
 
 ```
 pip install glyphh pypdf
 glyphh login          # once; or set GLYPHH_API_KEY
 python scripts/seed.py
+python scripts/seed.py --real <folder>    # the person's own past real applicants' resumes, when they have them
 ```
 
-It makes the six models in the person's own account, loads the examples that ship with the plugin (1,980
-generated, fictional applications) into `screener-fit`, `screener-made` and `screener-others`, and runs Ada's
-learning. It takes a few minutes and can be run again safely. `screener-files`, `screener-timing` and
-`screener-greenhouse` start empty and learn from the person alone. Tell the person what it did.
+It makes the models in the person's own account and loads the examples that ship with the plugin: 1,980
+generated, fictional applications, into `screener-closeness` as fakes and into `screener-fit` and `screener-made`
+with their labels, and runs Ada's learning on those two. `--real` loads the person's own resumes into
+`screener-closeness` as the real side; nothing of who the people are is kept, only the words of their resumes'
+sections. It takes a few minutes and can be run again safely. `screener-others` starts empty and holds only the
+applications the person screens; `screener-files`, `screener-timing` and `screener-greenhouse` start empty and
+learn from the person alone. Tell the person what it did.
 
 ## The steps
 

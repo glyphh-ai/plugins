@@ -9,8 +9,8 @@
     {
       "name": "resume-screener",
       "source": "./plugins/resume-screener",
-      "description": "Screens a job application with your own Ada models: first whether it comes from a real person (the email's timestamps, the files themselves, the application against the others seen, Greenhouse signals), then how well it fits the role.",
-      "version": "0.1.0"
+      "description": "Checks a resume and cover letter against your own Ada model: how close they are to real people's and to fakes, with Ada's confidence and fact tree. Can also screen the rest of an application.",
+      "version": "0.2.0"
     }
   ]
 }
