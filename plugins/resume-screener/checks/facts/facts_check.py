@@ -142,7 +142,7 @@ def score(answers: list[tuple[dict[str, Any], dict[str, Any] | None]], truth: st
 
 
 def steps_label(kind: str) -> str:
-    return "fake" if kind in ("gen", "tpl") or kind.endswith("-fake") else "real"
+    return "fake" if kind in ("gen", "tpl") or kind.endswith("-fake") or kind.startswith("fraud") else "real"
 
 
 def bands(answers: list[tuple[dict[str, Any], dict[str, Any] | None]]) -> list[dict[str, Any]]:
