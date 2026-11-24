@@ -147,6 +147,48 @@ def test_the_examples_that_ship_are_each_models_cases_and_a_setup_loads_them_onc
     assert "mine-fit: already there" in said and ada.made["mine-fit"].learned == 2
 
 
+def test_one_request_on_standard_input_is_screened_without_touching_the_disk(monkeypatch: Any, capsys: Any) -> None:
+    import base64
+    import io
+    import sys
+    import types
+
+    import run
+
+    asked: list[tuple[str, str]] = []
+
+    class Model:
+        def __init__(self, name: str) -> None:
+            self.name = name
+
+        def facts(self, data: Any, top: int = 0) -> Any:
+            asked.append((self.name, "facts"))
+            return types.SimpleNamespace(data=[])
+
+        def decide(self, data: Any) -> Any:
+            asked.append((self.name, "decide"))
+            return types.SimpleNamespace(outcome="strong", probabilities={"strong": 0.8}, ask=False)
+
+        def record(self, data: Any, outcome: str) -> None:
+            asked.append((self.name, "record"))
+
+    fake = types.ModuleType("glyphh")
+    fake.Ada = lambda: types.SimpleNamespace(model=Model)  # type: ignore[attr-defined]
+    monkeypatch.setitem(sys.modules, "glyphh", fake)
+    resume = base64.b64encode((FIXTURES / "strong-backend-resume.docx").read_bytes()).decode()
+    request = {"email": "Hi, my resume is attached.\n\nKeisha", "role": "Backend Engineer",
+               "files": [{"name": "resume.docx", "base64": resume}]}  # fmt: skip
+    monkeypatch.setattr(sys, "stdin", io.StringIO(json.dumps(request)))
+    monkeypatch.setattr(sys, "argv", ["run.py", "--stdin", "--prefix", "demo-screener-"])
+    monkeypatch.setattr("pathlib.Path.write_text", lambda *a, **k: (_ for _ in ()).throw(AssertionError("wrote a file")))
+    run.main()
+    said = json.loads(capsys.readouterr().out)
+    assert said["role"] == "backend engineer" and said["fit"]["outcome"] == "strong" and said["person"]["verdict"] == "real person"
+    assert said["person"]["signals"][0]["says"] == "not checked"  # no headers were pasted: timing has nothing to check
+    assert {name for name, _ in asked} == {f"demo-screener-{n}" for n in ("others", "fit", "files", "timing", "made")}
+    assert "record" not in {what for _, what in asked}  # nothing is kept without --keep
+
+
 def test_the_verdict_is_real_person_suspect_or_unsure_by_its_rule() -> None:
     clean = steps.compare(read(), {})
     real = steps.verdict(clean, {"fit": FIT, "timing": UNSURE, "files": UNSURE})
