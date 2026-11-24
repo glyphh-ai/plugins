@@ -151,3 +151,104 @@ What Ada's learning weighs most: how the employers are given (1.00), the schools
 unrelated work (0.77), short stints (0.70), the career's shape (0.67), dates (0.62), one-off details (0.62).
 
 None of this is the result. The result is the unseen test, run once with this design.
+
+### The unseen test (run once, 2026-11-24; look number 1, and the only one)
+
+980 unseen texts, read once by the agent and judged once. Nothing was changed after it.
+
+**In one sentence: the named signals fire on fraud-shaped applications from a builder never seen and rarely on
+real people, but Ada's whole decision calls half of the real people from unseen sources fake, so the headline
+fails.**
+
+| Unseen set | n | Ada says fake | A signal fired | Flagged (either) | Bar |
+|---|---|---|---|---|---|
+| **fraud-shaped, unseen builder** | 192 | 182 | 174 | **188 (98%)** | at least 80%: met |
+| of those, careful | 96 | 94 | 82 | 95 (99%) | at least 70%: met |
+| **real people, pooled** | 304 | 151 | 31 | **167 (55%)** | at most 20%: **missed** |
+| `gh` (GitHub) | 19 | 7 | 4 | 9 (47%) | at most 30%: missed |
+| `up` | 146 | 67 | 21 | 78 (53%) | missed |
+| `lrec-real` | 139 | 77 | 6 | 80 (58%) | missed |
+| polished real (`gh`, `up`) | 79 | 46 | 8 | 52 (66%) | at most 20%: missed |
+| invented, nothing planted: `tpl` | 100 | 87 | 6 | 87 | no bar |
+| invented: `lrec-fake` | 125 | 125 | 2 | 125 | no bar |
+| invented, written to pass: `gh-fake`, `up-fake` | 180 | 106 | 2 | 107 (59%) | no bar |
+
+**Why the real side failed, as far as the run shows.** Ada's learning put its heaviest weight on how the
+employers and schools are given. In the one seen real source the site had replaced every employer with a stand-in,
+so "employers withheld" came to mean "real", and real people who name their employers looked like the fakes. The
+split the protocol asked for shows it: of unseen real resumes left as their source gave them, Ada's decision or a
+signal flagged 79%; of those given a contact block by code, 34%. The decision followed the form of the one real
+source it had seen. The confound was in the data, and one real source could not remove it.
+
+**Per signal, each on its own (the firing rules, frozen before the test):**
+
+| Planted signal | Careless: its part fired | Careful: its part fired | Fired on real people (false alarm) | Bar (70% / 50% / at most 10%) |
+|---|---|---|---|---|
+| location (phone or email time against the home) | 12 of 12 | 12 of 12 | 5 of 304 (1.6%) | met |
+| name (email address named for someone else) | 12 of 12 | 12 of 12 | 5 of 304 (1.6%) | met |
+| address (mail drop, or elsewhere) | 12 of 12 | 9 of 12 | 19 of 304 (6.3%) | met |
+| dates and facts (something did not exist then) | 11 of 12 | **3 of 12** | 4 of 304 (1.3%) | careful: **missed** |
+| built (vague employers, nothing checkable) | 9 of 12 | 10 of 12 | 4 of 304 (1.3%) | met |
+
+Taken together, some signal fired on 174 of the 192 fraud-shaped applications (91%; 85% of the careful ones) and
+on 31 of the 304 real people (10%: `gh` 4 of 19, `up` 21 of 146, `lrec-real` 6 of 139). Most of the address alarms
+are on resumes whose contact block code made up. **This "signals only" reading was not the protocol's headline and
+is not claimed as a pass:** it is what the frozen rules did, and it would need its own run on fresh unseen
+material to count.
+
+**The memory signals** (run once; 60 held, 60 controls, unseen real resumes):
+
+| Variant | Flagged by its own signal | Bar 90% |
+|---|---|---|
+| another body, the same email and phone, a new name (`shared`) | 60 of 60 | met |
+| another body, the same name, new contact details (`name`) | 60 of 60 | met |
+| the same body under a new name and contacts (`pattern`) | **4 of 60** | **missed** |
+| controls flagged by any | 0 of 60 | met |
+
+`pattern` missed because the comparison reads a resume by its section headings, and these two unseen sources
+(one with its punctuation stripped, one with damaged encoding) have none it recognises: there was no body to
+compare. On this plugin's own corpus the same comparison caught 100% (check 1).
+
+**Controls and baselines on the same unseen test:**
+
+| | Real people right | Fraud-shaped caught | |
+|---|---|---|---|
+| Layout only | 62% | 49% | balanced 56%: at or under 60%, so **format alone does not separate the unseen test**, as required |
+| Words only (check 4's model) | 0% | 38% | calls every unseen real person fake |
+| Claude alone | 78% | 89% | and caught 2 of the 180 invented-to-pass fakes |
+| Ada alone (no firing rule) | 50% | 95% | |
+
+Fraud-shaped applications were flagged alike whatever form they were written in (`gh` 9 of 9, `up` 87 of 89,
+`lrec-real` 92 of 94).
+
+**Confidence is not meaningful on unseen sources.** When Ada said 90% or more it was right 80% of the time (543
+cases); at 80 to 90%, 62%; at 70 to 80%, 60%; at 60 to 70%, 57%. It overstates, and must not be shown as a
+probability of fraud.
+
+### What this does and does not show
+
+- It shows: an agent reading with a fixed schema, and plain rules over that reading, find planted location, name,
+  address and built-to-order defects written by a model and prompt never seen, with few alarms on real people
+  from three sources never seen; and Ada's memory finds a reused email, phone or name every time.
+- It does not show: that Ada's learned decision can tell fraud from real people across sources. It could not: it
+  flagged half of the real people.
+- It does not show anything about **real** fraud. Every fraudulent application here was built for the test. The
+  schemes documented in [fraud-indicators.md](fraud-indicators.md) often use a real person's identity and work
+  history, which no reading of a resume can tell from that person.
+- Careful date and fact conflicts are not found (3 of 12), and on the seed real people's dates conflicted more
+  often than built ones.
+
+### What the evidence suggests is needed
+
+1. **Real people from more than one source in the seed**, ideally the customer's own past applicants: with one
+   real source Ada learned that source. A design that holds out one seen source at a time would have shown this
+   before the test.
+2. **Ada's decision limited to facts that mean the same in every source**, or the verdict taken from the named
+   signals with Ada used for memory (shared contacts, names, bodies) and for learning from the person's answers,
+   which is where it did its work here.
+3. **A fresh unseen test** for whichever of those is built: this one has been looked at and must not be used to
+   design.
+4. **A customer's own flagged cases**, to say anything about real fraud.
+
+Money: 38.36 US dollars spent of the 80 cap across checks 5 and 6 (Claude wrote 1,091 texts,
+read 4,227 and was asked alone 2,451 times; the ledger is local).
