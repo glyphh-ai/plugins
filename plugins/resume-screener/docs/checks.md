@@ -265,6 +265,76 @@ around Claude, not Claude:
 Both fixtures are train rows, so each met its own example: the fit answers here are a model recognising a case it
 holds, not a test of it, and `others` rightly named each as "the same person applying again".
 
+That last line was a fault: every example is a generated application, so nearness to one is nearness to a fake,
+never "the same person applying again". Since then the `others` model starts empty and holds only the applications
+you screen, and the examples are held as what they are, fakes, in the closeness model (check 4).
+
+## Check 4: closer to real people, or to fakes
+
+### What is checked
+
+The closeness model ([closeness-model.md](closeness-model.md)) holds two labelled sets, fakes and real, and says
+for a resume how alike its nearest fake and its nearest real one are. The check asks two things. Does a fake it
+has never seen come out nearer to fakes, and a real resume it has never seen nearer to real ones? And if so, is it
+telling real from fake, or only telling one source from another: our one generator from one resume website?
+
+### The data, and what each part is
+
+- **Fakes:** the 1,980 generated examples that ship with the plugin (the corpus's train split; the 450 test rows
+  are not used). 1,862 have an experience section the reader found; only those are used.
+- **Real side:** the "Resume Dataset" on Kaggle (2,484 resumes scraped from livecareer.com, by job category), read
+  from its Hugging Face mirror. They are a resume site's published examples, most dated 2014 to 2016, before AI
+  writing tools; who wrote each is not documented. Resumes only: no cover letters, no emails. The site's text has
+  its line breaks flattened to runs of spaces, which the reader turns back into lines, and stand-in words
+  ("Company Name", "City, State") which are removed. The mirror states no licence, so these texts are used on one
+  machine for this check only: never committed here, never part of what the plugin ships.
+- **Other sources, never held by the model:** (a) about 20 resumes their own authors published on GitHub under an
+  open licence before November 2022: real people, mostly software; (b) resume PDFs from another public set
+  (`d4rk3r/resumes-raw-pdf`), English ones only, authorship unknown; (c) 200 applications that a different
+  program wrote from sentence templates: fakes of another kind.
+
+### Protocol (written 2026-11-24, before it was run)
+
+A plumbing run of 60 rows a side, asking 3, was made first to see the calls work; nothing of it is a result.
+
+- Each side is ordered by `sha256("glyphh-closeness-1:" + id)`. The first 300 of each are held out: never
+  recorded. The next 1,560 of each are recorded in one model made from `models/closeness.json`, as `fake` and
+  `real`.
+- Each held-out resume is asked as the plugin asks: its nearest fake and nearest real, then Ada's decision on the
+  resume alone. Reported for each side: how many read as fakes, as real, and between; Ada's decisions and how many
+  it was unsure of; and the spread of the two closeness numbers and of their difference.
+- **Topic.** The fakes cover ten roles and the real side 24 categories, so words differ by trade. The held-out
+  real resumes in categories near the fakes' roles (IT, finance, accounting, design, sales, business development,
+  engineering, HR, digital media) are also reported apart.
+- **Other sources.** Each is asked the same way, once, and reported apart. What would be expected if the model
+  told real from fake: (a) and (b) nearer to real, (c) nearer to fakes.
+- **The format control.** A second Ada model reads nothing of the words: only how the summary and the duties are
+  laid out (how many words, word length, words a sentence, digits, capitals and commas per 1,000 characters, and
+  the education line's length), from text cut to the same lengths on both sides. It is seeded with the same 1,560
+  a side, Ada's learning is run, and it decides the same 600 held-out resumes.
+- Ada only: no other model of any kind. Run once.
+
+### Bar, and how the result is to be read (written before running)
+
+1. **Held-out rows:** at least 90% of held-out fakes read as fakes, and at least 90% of held-out real read as
+   real. A miss on either is a miss.
+2. **The format control:** if the format-only model is right on 90% or more of the 600, then format alone
+   separates the two sets, and result 1 cannot be read as "real against fake": the two sets differ in ways that
+   have nothing to do with who wrote them.
+3. **Other sources:** if fewer than 70% of the GitHub resumes read as real, or fewer than 70% of the other
+   program's applications read as fakes, the model is telling these two sources apart, not real from fake, and
+   that is what will be said.
+
+### What this cannot show
+
+Even if every line passes: the fakes are one generator's and the real side is one website's examples, not
+applications people sent to an employer. No real applicant's resume, and no fake a person made to pass as real,
+was tested. The GitHub set is about 20 resumes of one kind of person.
+
+### Results
+
+Not run yet.
+
 ## Not checked at all
 
 - Real applicants, real fraud, real emails' timestamps.

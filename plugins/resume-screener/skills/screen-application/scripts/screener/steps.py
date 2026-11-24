@@ -90,7 +90,7 @@ def compare(got: dict[str, Any], facts: dict[str, Any], signals: dict[str, Any] 
 
 def cases(app: dict[str, Any]) -> dict[str, Any]:
     """Step 4. The case of each model that is asked to decide (the `others` model was asked in step 2)."""
-    asked = {name: fill(m["case"], app) for name, m in models().items() if name != "others"}
+    asked = {name: fill(m["case"], app) for name, m in models().items() if name not in ("others", "closeness")}
     return {name: case for name, case in asked.items() if name != "greenhouse" or "greenhouse" in app}
 
 
