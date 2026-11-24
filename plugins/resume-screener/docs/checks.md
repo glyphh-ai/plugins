@@ -154,7 +154,8 @@ Everything below is on headers written for the purpose.
 - **2a, the code.** `tests/test_timing.py`: each thing the code names, on a crafted header set that has it and one
   that does not. Bar: every test passes. This shows the code does what it says; nothing more.
 - **2b, arriving together, on real Ada.** The `others` model holds, for each application, the ten minutes it
-  arrived in. Crafted arrivals are recorded: 40 groups, group g at a base time 3 hours after group g-1; in each
+  arrived in. Crafted arrivals are recorded: 40 groups, group g at a base time 3 hours and 97 seconds after group
+  g-1 (so the groups fall differently against the clock's tens of minutes); in each
   group one message at the base time and four more at +1, +2, +3 and +4 minutes; and one lone message 90 minutes
   after each base time. Then asked, never recorded: for each group a new message at +2.5 minutes (expected:
   counted with at least 3 others, so a burst), and a new message 45 minutes after each base time (expected: counted
@@ -164,9 +165,9 @@ Everything below is on headers written for the purpose.
 - **2c, the timing model learns the person's answers, on real Ada.** The model starts empty. 60 crafted emails are
   made by code from a fixed seed: 30 ordinary (2 or 3 servers in order, seconds apart, sent between 08:00 and
   18:00) and 30 with a fault (10 dated after the first server had it, 10 with servers out of order, 10 with more
-  than an hour between servers). 40 of them (20 and 20, the first of each kind) are recorded with the answer a
-  person would plausibly give (`fine` for ordinary, `suspect` for a fault); Ada's learning is not run. The other 20
-  (10 ordinary, 10 with a fault) are decided once. Bar: at least 18 of 20 answered as taught. Reported: how many
+  than an hour between servers). 40 of them (the first 20 ordinary; the first 7 dated ahead, the first 7 out of
+  order and the first 6 slow) are recorded with the answer a person would plausibly give (`fine` for ordinary,
+  `suspect` for a fault); Ada's learning is not run. The other 20 (10 ordinary, 10 with a fault) are decided once. Bar: at least 18 of 20 answered as taught. Reported: how many
   Ada was unsure of.
 
 ### What this cannot show
