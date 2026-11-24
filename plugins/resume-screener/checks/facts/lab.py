@@ -111,6 +111,14 @@ def sets() -> None:
     if up.exists():
         rows = {r["id"]: r for r in (json.loads(line) for line in up.read_text().split("\n") if line.strip())}
         out += [row(f"up:{i}", "up", "test", rows[i]["text"]) for i in order(list(rows))[:150]]
+    lrec = HUMAN / "public/lrec-2026/sample.jsonl"
+    if lrec.exists():
+        kinds = {"authentic": "lrec-real", "ai-generated": "lrec-fake", "ai-enhanced": "lrec-enhanced"}
+        seen_texts: set[str] = set()
+        for r in (json.loads(line) for line in lrec.read_text().split("\n") if line.strip()):
+            if r["text"] not in seen_texts and len(r["text"]) >= 600:  # the corpus repeats some texts: each once
+                seen_texts.add(r["text"])
+                out.append(row(f"lrec:{r['id']}", kinds[r["label"]], "test", r["text"]))
     made = {r["uid"] for r in out}
     out += [t for t in load("texts.jsonl") if t["uid"] not in made]  # what Claude wrote earlier is kept
     save("texts.jsonl", out)
@@ -240,7 +248,7 @@ def chosen(which: str) -> list[dict[str, Any]]:
 def asked(stage: str, into: str, which: str, system: str, schema: dict[str, Any]) -> None:
     """Claude asked the same thing of every chosen text not asked yet; answers added to `into`, by uid alone."""
     have = {r["uid"] for r in load(into)}
-    todo = [t for t in chosen(which) if t["uid"] not in have]
+    todo = [t for t in chosen(which) if t["uid"] not in have and (stage == "read" or t["split"] != "seed")]
     fmt = {"format": {"type": "json_schema", "schema": schema}, "effort": "low"}
     asks = [(t["uid"], {"system": system, "output_config": fmt, "messages": [{"role": "user", "content": reading.user(t["text"])}]})
             for t in todo]  # fmt: skip
