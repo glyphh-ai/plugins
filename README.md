@@ -1,3 +1,5 @@
+> **Moved.** This repository is archived. It now lives, with its full history, in [glyphh-ai/glyphh](https://github.com/glyphh-ai/glyphh/tree/main/plugins) as `plugins/`. Ada is a Glyphh Labs project and is no longer a hosted service: https://glyphh.ai
+
 # Glyphh plugins
 
 Templates for [Ada](https://glyphh.ai), as Claude plugins. Each template is a plain, handwritten plugin: a skill that
